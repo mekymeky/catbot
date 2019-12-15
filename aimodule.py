@@ -1,6 +1,5 @@
-import threading
 import http.client
-import discord.utils
+
 
 class AIModule():
     def __init__(self):
@@ -22,11 +21,11 @@ class AIModule():
 
     def process(self, text):
         response = self.request(text)
-        if (response == "#BUSY"):
+        if response == "#BUSY":
             return "AI module is busy processing, pls wait <:angelblobcat:618892026284343316>"
-        elif (response == "#ERROR"):
+        elif response == "#ERROR":
             return "AI module error <:blobcatgooglygun:618892026687127552>"
-        elif (response == "#INACCESSIBLE"):
+        elif response == "#INACCESSIBLE":
             return "AI module inaccessible <:blobcatnotlike:618892026930397214>"
         else:
             response = self.smartcap(response)

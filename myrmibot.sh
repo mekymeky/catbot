@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python3.6 myrmibot.py
+python3.6 catbot.py

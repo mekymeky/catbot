@@ -1,15 +1,19 @@
-import os, pickle, threading
+import pickle
+import threading
 
 MACRO_RELOAD = True
 MACRO_TABLE = {}
 MACRO_LOCK = threading.Semaphore()
 FILE_LOCK = threading.Semaphore()
 
+
 def reload():
     global MACRO_RELOAD
     global MACRO_TABLE
     global FILE_LOCK
-    if not MACRO_RELOAD: return
+
+    if not MACRO_RELOAD:
+        return
 
     FILE_LOCK.acquire()
     try:
@@ -21,6 +25,7 @@ def reload():
     FILE_LOCK.release()
 
     MACRO_RELOAD = False
+
 
 def write():
     global MACRO_RELOAD
@@ -37,64 +42,68 @@ def write():
     FILE_LOCK.release()
 
 
-
-def run(message, text):
+def run(cmsg, macro_variable):
     global MACRO_TABLE
     reload()
-    
-    macroname = text[1::]
+    if not macro_variable:
+        return ""
+
+    if macro_variable[0] == "/":
+        macroname = macro_variable[1::]
+    else:
+        macroname = macro_variable
     try:
-        return MACRO_TABLE[message.guild.id][macroname]
+        return MACRO_TABLE[cmsg.server_id][macroname]
     except Exception as ex:
         print(ex)
         return ""
 
 
-def define(message, text):
+def define(cmsg):
     global MACRO_TABLE
     global MACRO_LOCK
-    tmp = text.split(" ")
+    tmp = cmsg.raw.split(" ")
     MACRO_LOCK.acquire()
     try:
         tmp.pop(0)
         macroname = tmp.pop(0)
         macrotext = " ".join(tmp)
-        if not (message.guild.id in MACRO_TABLE):
-            MACRO_TABLE[message.guild.id] = {}
-        MACRO_TABLE[message.guild.id][macroname] = macrotext
+        if not (cmsg.server_id in MACRO_TABLE):
+            MACRO_TABLE[cmsg.server_id] = {}
+        MACRO_TABLE[cmsg.server_id][macroname] = macrotext
         write()
     except Exception as ex:
         print(ex)
     MACRO_LOCK.release()
 
-def undefine(message, text):
+
+def undefine(cmsg):
     global MACRO_TABLE
     global MACRO_LOCK
     MACRO_LOCK.acquire()
     try:
-        macronames = text[10::].split(" ")
+        macronames = cmsg.raw[10::].split(" ")
         for macroname in macronames:
-            if message.guild.id in MACRO_TABLE:
-                del(MACRO_TABLE[message.guild.id][macroname])
+            if cmsg.server_id in MACRO_TABLE:
+                del(MACRO_TABLE[cmsg.server_id][macroname])
         write()
     except Exception as ex:
         print(ex)
     MACRO_LOCK.release()
 
 
-def listmacros(message):
+def listmacros(cmsg):
     global MACRO_TABLE
     global MACRO_LOCK
     reload()
     MACRO_LOCK.acquire()
     try:
-        names = MACRO_TABLE[message.guild.id].keys()
+        names = MACRO_TABLE[cmsg.server_id].keys()
         MACRO_LOCK.release()
-        if len(names)==0:
+        if len(names) == 0:
             return "No macros defined."
         return ", ".join(names)
     except Exception as ex:
         MACRO_LOCK.release()
         print(ex)
         return "No macros defined."
-    MACRO_LOCK.release()
