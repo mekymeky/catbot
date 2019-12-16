@@ -32,22 +32,22 @@ class Logger:
 
     def debug(self, *args):
         if self.level >= LogLevel.DEBUG:
-            self.method("DEBUG:", args)
+            self.method(*tuple(["DEBUG:"]) + args)
 
     def info(self, *args):
         if self.level >= LogLevel.INFO:
-            self.method("INFO:", args)
+            self.method(*tuple(["INFO:"]) + args)
 
     def warn(self, *args):
         if self.level >= LogLevel.WARN:
-            self.method("WARN:", args)
+            self.method(*tuple(["WARN:"]) + args)
 
     def error(self, *args):
         if self.level >= LogLevel.ERROR:
-            self.method("ERROR:", args)
+            self.method(*tuple(["ERROR:"]) + args)
 
     def print_log(self, *args):
-        print(args)
+        print(*args)
 
 
 LOGGER = Logger()
@@ -87,6 +87,7 @@ class RestModule:
     def __init__(self, url):
         self.url = url
 
+    # TODO
     def run(self, *args):
         pass
 
@@ -111,11 +112,11 @@ class Module:
         elif self.type == Module.REST_API:
             assert self.url is not None
 
-    def run(self, cmsg):
-        return self.handler(cmsg)
-
-    async def async_run(self, cmsg):
-        return await self.handler(cmsg)
+    async def run(self, cmsg):
+        if self.is_async:
+            return await self.handler(cmsg)
+        else:
+            return await cmsg.bot.loop.run_in_executor(None, self.handler, cmsg)
 
     def __str__(self):
         result = "\n\t\tModule(" + TYPENAMES[Module][self.type]
@@ -134,21 +135,21 @@ class AsyncModule(Module):
 
 class FuncCall(Module):
     def __init__(self, function):
-        super().__init__("Function call: " + str(function), Module.NATIVE, handler=function)
+        super().__init__("Function call", Module.NATIVE, handler=function)
 
 
 class AsyncFuncCall(AsyncModule):
     def __init__(self, function):
-        super().__init__("Async function call: " + str(function), Module.NATIVE, handler=function)
+        super().__init__("Async function call", Module.NATIVE, handler=function)
 
 
-class StrFuncCall(FuncCall):
+class StrFuncCall(Module):
     def __init__(self, function):
-        super().__init__(function)
+        super().__init__("String function call", Module.NATIVE, handler=function)
 
     # overrides Module.run
-    def run(self, cmsg):
-        return Action(Action.END, self.handler(cmsg))
+    async def run(self, cmsg):
+        return Action(Action.END, await super().run(cmsg))
 
 
 class SimpleMessage(Module):
@@ -260,7 +261,7 @@ class Rule:
         result += ", custom_method=" + str(self.custom_method)
         result += ", process_raw=" + str(self.process_raw)
         result += ", module=" + str(self.module)
-        result += "\t)"
+        result += "\n\t)"
         return result
 
 

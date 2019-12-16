@@ -2,9 +2,9 @@ import requests
 import botbase as base
 
 
-class CatApi:
+class CatApi(base.AsyncModule):
     def __init__(self):
-        pass
+        super().__init__("CatAPI", base.Module.NATIVE, handler=self.handle)
 
     async def handle(self, cmsg):
         try:

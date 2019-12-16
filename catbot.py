@@ -9,6 +9,7 @@ import dice
 import importlib
 import aimodule
 import catapi
+import dogapi
 import botbase as base
 from cbmessage import CatbotMessage
 
@@ -19,7 +20,6 @@ CURR = 0
 BOT = discord.Client()
 CLI = catbotcli.CatCLI()
 AIM = aimodule.AIModule()
-CAT_API = catapi.CatApi()
 
 LASTDAY = None
 
@@ -80,28 +80,35 @@ def guess():
         return "mlem"
 
 
-def get_help_message(cmsg):
-    result = "```"
-    result += "Available commands:\n"
-    result += "!macros\n"
-    result += "!define ...\n"
-    result += "!undefine ...\n"
-    result += "!roll ...\n"
-    result += "!a ...\n"
-    result += "!introspect\n"
-    result += "!help\n"
-    result += "```"
-    return result
+def embed_ln(embed, name, value, inline=False):
+    embed.add_field(name=name, value=value, inline=inline)
 
 
-def get_introspection_result(cmsg):
+async def get_help_message(cmsg):
+    e = discord.Embed(title="Available commands", color=0x5bad8b)
+    e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
+    embed_ln(e, "!macros", "List defined macros.")
+    embed_ln(e, "!define MACRO_NAME CONTENT", "Define a new macro.")
+    embed_ln(e, "!undefine MACRO_NAME", "Undefine macro.")
+    embed_ln(e, "/MACRO_NAME [MACRO_NAME] ...", "Convert macro name to its content. Macros can be chained.")
+    embed_ln(e, "!roll DICE_DEF", "Roll the dice. Syntax can be found here: https://pypi.org/project/dice/ \nExample: !roll 3d5+1")
+    embed_ln(e, "!a TEXT", "Send text to the AI module.")
+    embed_ln(e, "!introspect", "Get bot state.")
+    embed_ln(e, "!help", "Display this help text.")
+    e.set_footer(text=cmsg.bot_name + " version " + VERSION)
+    await cmsg.embed(e)
+
+
+async def get_introspection_result(cmsg):
     aim_accessible = AIM.test()
-    result = "```"
-    result += BOT.user.name + " version: " + VERSION + "\n"
-    result += "\n"
-    result += "AIM accessible: " + str(aim_accessible) + "\n"
-    result += "```"
-    return result
+    e = discord.Embed(title="Internal state", color=0xf3c24a, description="(Not yet implemented)")
+    e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
+    embed_ln(e, "name", str(cmsg.bot_name))
+    embed_ln(e, "nickname", str(cmsg.bot_nickname))
+    embed_ln(e, "version", VERSION)
+    embed_ln(e, "AIM accessible", str(aim_accessible))
+    e.set_footer(text=cmsg.bot_name + " version " + VERSION)
+    await cmsg.embed(e)
 
 
 @BOT.event
@@ -124,20 +131,18 @@ async def on_message(message):
             base.LOGGER.debug("Checking rule: ", rule)
             if rule.check(cmsg):
                 base.LOGGER.debug("Running module")
-                if rule.module.is_async:
-                    action = await rule.module.async_run(cmsg)
-                else:
-                    action = rule.module.run(cmsg)
+                action = await rule.module.run(cmsg)
+                print(str(type(action)) + " " + str(action))
+
+                if action is None or not isinstance(action, base.Action):
+                    action = base.NO_MESSAGE_ACTION
+                if action.message:
+                    await cmsg.respond(action.message)
+                if action.reaction:
+                    await cmsg.react(action.reaction)
                 if rule.exclusive:
                     base.LOGGER.debug("Exclusive rule, breaking execution")
                     break
-
-        if action is None:
-            break
-        if action.message:
-            await cmsg.respond(action.message)
-        if action.reaction:
-            await cmsg.react(action.reaction)
 
     # Legacy beep boop detection, to be refactored
     if len(cmsg.words) == 1:
@@ -218,8 +223,8 @@ def load_token():
 RULES = {
     "global": [
         # main, exclusive rules
-        base.Rule("!help", base.Rule.STARTS_WITH, base.StrFuncCall(get_help_message)),
-        base.Rule("!introspect", base.Rule.STARTS_WITH, base.StrFuncCall(get_introspection_result)),
+        base.Rule(["!help", "!hlep"], base.Rule.STARTS_WITH, base.AsyncFuncCall(get_help_message)),
+        base.Rule("!introspect", base.Rule.STARTS_WITH, base.AsyncFuncCall(get_introspection_result)),
         base.Rule("!cli", base.Rule.STARTS_WITH, base.Module("Catbot CLI", base.Module.NATIVE, handler=CLI.handle)),
         base.Rule("!define ", base.Rule.STARTS_WITH, base.FuncCall(macro.define)),
         base.Rule("!undefine ", base.Rule.STARTS_WITH, base.FuncCall(macro.undefine)),
@@ -227,7 +232,8 @@ RULES = {
         base.Rule("/", base.Rule.STARTS_WITH, base.AsyncFuncCall(process_macro)),
         base.Rule("!a ", base.Rule.STARTS_WITH, base.AsyncFuncCall(ai_process)),
         base.Rule("!roll ", base.Rule.STARTS_WITH, base.StrFuncCall(dice_roll)),
-        base.Rule("!cat", base.Rule.CONTAINS_ONE_OF, base.AsyncModule("CatAPI", base.Module.NATIVE, handler=CAT_API.handle)),
+        base.Rule("!cat", base.Rule.CONTAINS_ONE_OF, catapi.CatApi()),
+        base.Rule("!dog", base.Rule.CONTAINS_ONE_OF, dogapi.DogApi()),
 
         # reaction rules
         base.RuleOp.rules_and().rules(

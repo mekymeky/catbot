@@ -13,6 +13,7 @@ class CatbotMessage:
         self.server_id = discord_msg.guild.id
         self.bot = bot
         self.bot_name = bot.user.name
+        self.bot_nickname = discord_msg.guild.me.nick
         self.author = str(discord_msg.author)
         self.channel = str(discord_msg.channel)
 
@@ -43,6 +44,9 @@ class CatbotMessage:
     async def sleep(self, seconds):
         await asyncio.sleep(seconds)
 
+    async def embed(self, embed):
+        await self.discord_msg.channel.send(embed=embed)
+
     # TODO not yet working properly
     async def send_image(self, url):
         embed = discord.Embed()
@@ -51,6 +55,10 @@ class CatbotMessage:
 
     async def delete(self):
         await self.discord_msg.delete()
+
+    def get_default_embed(self):
+        embed = discord.Embed()
+        embed.set_author(self.bot.user)
 
     def contains_words(self, wlist):
         if wlist is None:
@@ -64,7 +72,7 @@ class CatbotMessage:
         return True
 
     def init_mentions(self):
-        if self.bot_name.lower() in self.raw or "<@439045787041660928>" in self.raw or "<@!439045787041660928>" in self.raw:
+        if self.bot_name.lower() in self.msg or "<@439045787041660928>" in self.raw or "<@!439045787041660928>" in self.raw or self.bot_nickname.lower() in self.msg:
             self.flags["mentioned"] = True
         if self.bot_name in self.words:
             self.flags["name_mentioned"] = True
