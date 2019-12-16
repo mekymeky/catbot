@@ -94,6 +94,8 @@ async def get_help_message(cmsg):
     embed_ln(e, "!roll DICE_DEF", "Roll the dice. Syntax can be found here: https://pypi.org/project/dice/ \nExample: !roll 3d5+1")
     embed_ln(e, "!a TEXT", "Send text to the AI module.")
     embed_ln(e, "!introspect", "Get bot state.")
+    embed_ln(e, "!cat", "Cat.")
+    embed_ln(e, "!dog", "Like cat, but dog.")
     embed_ln(e, "!help", "Display this help text.")
     e.set_footer(text=cmsg.bot_name + " version " + VERSION)
     await cmsg.embed(e)
@@ -132,7 +134,6 @@ async def on_message(message):
             if rule.check(cmsg):
                 base.LOGGER.debug("Running module")
                 action = await rule.module.run(cmsg)
-                print(str(type(action)) + " " + str(action))
 
                 if action is None or not isinstance(action, base.Action):
                     action = base.NO_MESSAGE_ACTION

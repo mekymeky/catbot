@@ -46,8 +46,13 @@ class Logger:
         if self.level >= LogLevel.ERROR:
             self.method(*tuple(["ERROR:"]) + args)
 
+    # TODO fix unicode issues
     def print_log(self, *args):
-        print(*args)
+        try:
+            print(*args)
+        except Exception as ex:
+            print("LOG FAILED")
+            print(ex)
 
 
 LOGGER = Logger()
@@ -172,9 +177,8 @@ class SimpleReaction(Module):
     def validate(self):
         assert self.reaction
 
-    def run(self, cmsg):
+    async def run(self, cmsg):
         return Action(Action.END, reaction=self.reaction)
-
 
 class Rule:
     MATCH = 0  # exactly matches conditions (depending on case sensitivity)

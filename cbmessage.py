@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import asyncio
 import discord
 
@@ -14,6 +16,8 @@ class CatbotMessage:
         self.bot = bot
         self.bot_name = bot.user.name
         self.bot_nickname = discord_msg.guild.me.nick
+        if not self.bot_nickname:
+            self.bot_nickname = self.bot_name
         self.author = str(discord_msg.author)
         self.channel = str(discord_msg.channel)
 
