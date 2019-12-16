@@ -8,6 +8,7 @@ import catbotcli
 import dice
 import importlib
 import aimodule
+import catapi
 import botbase as base
 from cbmessage import CatbotMessage
 
@@ -18,6 +19,7 @@ CURR = 0
 BOT = discord.Client()
 CLI = catbotcli.CatCLI()
 AIM = aimodule.AIModule()
+CAT_API = catapi.CatApi()
 
 LASTDAY = None
 
@@ -218,13 +220,14 @@ RULES = {
         # main, exclusive rules
         base.Rule("!help", base.Rule.STARTS_WITH, base.StrFuncCall(get_help_message)),
         base.Rule("!introspect", base.Rule.STARTS_WITH, base.StrFuncCall(get_introspection_result)),
-        base.Rule("!cat", base.Rule.STARTS_WITH, base.Module("Catbot CLI", base.Module.NATIVE, handler=CLI.handle)),
+        base.Rule("!cli", base.Rule.STARTS_WITH, base.Module("Catbot CLI", base.Module.NATIVE, handler=CLI.handle)),
         base.Rule("!define ", base.Rule.STARTS_WITH, base.FuncCall(macro.define)),
         base.Rule("!undefine ", base.Rule.STARTS_WITH, base.FuncCall(macro.undefine)),
         base.Rule("!macros", base.Rule.STARTS_WITH, base.StrFuncCall(macro.listmacros)),
         base.Rule("/", base.Rule.STARTS_WITH, base.AsyncFuncCall(process_macro)),
         base.Rule("!a ", base.Rule.STARTS_WITH, base.AsyncFuncCall(ai_process)),
         base.Rule("!roll ", base.Rule.STARTS_WITH, base.StrFuncCall(dice_roll)),
+        base.Rule("!cat", base.Rule.CONTAINS_ONE_OF, base.AsyncModule("CatAPI", base.Module.NATIVE, handler=CAT_API.handle)),
 
         # reaction rules
         base.RuleOp.rules_and().rules(

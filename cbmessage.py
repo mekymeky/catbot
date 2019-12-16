@@ -1,4 +1,5 @@
 import asyncio
+import discord
 
 UNCERTAIN_QUESTIONS_ENABLED = True
 
@@ -41,6 +42,12 @@ class CatbotMessage:
 
     async def sleep(self, seconds):
         await asyncio.sleep(seconds)
+
+    # TODO not yet working properly
+    async def send_image(self, url):
+        embed = discord.Embed()
+        embed.set_image(url=url)
+        await self.discord_msg.channel.send(embed=embed)
 
     async def delete(self):
         await self.discord_msg.delete()
