@@ -213,7 +213,7 @@ def load_token():
 
 
 async def beep_boop(cmsg):
-    remapping = {"o": "e", "O": "E", "e": "o", "E": "O"}
+    remapping = {"o": "e", "O": "E", "e": "o", "E": "O", "i": "o", "I": "O"}
     response = ""
     for char in cmsg.raw:
         if char in remapping:
@@ -229,16 +229,17 @@ class BeepBoopRule(base.Rule):
         super().__init__(None, base.Rule.CUSTOM, module)
 
     def check(self, cmsg):
-        char_filter = ["b", "e", "o", "p"]
+        char_filter = ["b", "l", "i", "e", "o", "p"]
         filtered = ""
         for char in cmsg.raw_lower:
             if 97 <= ord(char) <= 122:
                 if char not in char_filter:
                     return False
                 filtered += char
-                if len(filtered) > 4:
+                if len(filtered) > 5:
                     return False
-        return filtered in ["beep", "boop", "bep", "bop"]
+        return filtered in ["beep", "boop", "bep", "bop", "bip", "bepp", "bopp", "blep", "blop", "blip",
+                            "blepp", "blopp", "blipp"]
 
 
 RULES = {
