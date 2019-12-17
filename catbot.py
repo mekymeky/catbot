@@ -253,7 +253,7 @@ RULES = {
         base.Rule("/", base.Rule.STARTS_WITH, base.AsyncFuncCall(process_macro)),
         base.Rule("!a ", base.Rule.STARTS_WITH, base.AsyncFuncCall(ai_process)),
         base.Rule("!roll ", base.Rule.STARTS_WITH, base.StrFuncCall(dice_roll)),
-        base.Rule(["!cat", "!kitte", "!kitty", "!meow"], base.Rule.STARTS_WITH, catapi.CatApi()),
+        base.Rule(["!cat", "!kitte", "!kitty", "!meow", "!kat"], base.Rule.STARTS_WITH, catapi.CatApi()),
         base.Rule(["!dog", "!woof", "!bark", "!bork"], base.Rule.STARTS_WITH, dogapi.DogApi()),
 
         # reaction rules
