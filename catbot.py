@@ -223,6 +223,24 @@ async def beep_boop(cmsg):
     await cmsg.respond(response)
 
 
+class BeepBoopRule(base.Rule):
+
+    def __init__(self, module):
+        super().__init__(None, base.Rule.CUSTOM, module)
+
+    def check(self, cmsg):
+        char_filter = ["b", "e", "o", "p"]
+        filtered = ""
+        for char in cmsg.raw_lower:
+            if 97 <= ord(char) <= 122:
+                if char not in char_filter:
+                    return False
+                filtered += char
+                if len(filtered) > 4:
+                    return False
+        return filtered in ["beep", "boop", "bep", "bop"]
+
+
 RULES = {
     "global": [
         # main, exclusive rules
@@ -248,7 +266,7 @@ RULES = {
         base.Rule("night", base.Rule.FLAGS_ALL, base.SimpleReaction(base.EMOJI_MOON)),
         base.Rule(["greeting", "farewell"], base.Rule.FLAGS_ONE_OF, base.SimpleReaction(base.EMOJI_WAVE)),
 
-        base.Rule(["beep", "boop"], base.Rule.CONTAINS_ONE_OF, base.AsyncFuncCall(beep_boop))
+        BeepBoopRule(base.AsyncFuncCall(beep_boop))
     ]
 }
 
