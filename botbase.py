@@ -190,13 +190,13 @@ class Rule:
     FLAGS_ONE_OF = 6
     CUSTOM = 7
 
-    def __init__(self, conditions, rule_type, module, exclusive=True, custom_method=None, process_raw=True):
+    def __init__(self, conditions, rule_type, module, exclusive=True, custom_method=None, case_sensitive=False):
         self.conditions = conditions
         self.type = rule_type
         self.module = module
         self.exclusive = exclusive
         self.custom_method = custom_method
-        self.process_raw = process_raw
+        self.case_sensitive = case_sensitive
 
     def check(self, cmsg):
         method = None
@@ -235,10 +235,10 @@ class Rule:
         if isinstance(content, str):
             return content
         elif isinstance(content, CatbotMessage):
-            if self.process_raw:
+            if self.case_sensitive:
                 return content.raw
             else:
-                return content.msg
+                return content.raw_lower
         else:
             LOGGER.error("Unsupported content type:", type(content))
             return ""
@@ -263,7 +263,7 @@ class Rule:
         result += ": conditions=" + str(self.conditions)
         result += ", exclusive=" + str(self.exclusive)
         result += ", custom_method=" + str(self.custom_method)
-        result += ", process_raw=" + str(self.process_raw)
+        result += ", case_sensitive=" + str(self.case_sensitive)
         result += ", module=" + str(self.module)
         result += "\n\t)"
         return result

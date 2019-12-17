@@ -13,7 +13,7 @@ import dogapi
 import botbase as base
 from cbmessage import CatbotMessage
 
-VERSION = "2.0.0"
+VERSION = "2.0.1"
 
 CURR = 0
 
@@ -128,7 +128,7 @@ async def on_message(message):
     # Process message using available ruleset
     action = base.Action(base.Action.CONTINUE)
     while action.type == base.Action.CONTINUE:
-        action = None
+        action = base.NO_MESSAGE_ACTION
         for rule in RULES["global"]:
             base.LOGGER.debug("Checking rule: ", rule)
             if rule.check(cmsg):
@@ -145,15 +145,6 @@ async def on_message(message):
                     base.LOGGER.debug("Exclusive rule, breaking execution")
                     break
 
-    # Legacy beep boop detection, to be refactored
-    if len(cmsg.words) == 1:
-        if "beep" in cmsg.words:
-            await message.channel.send("boop")
-            return
-        if "boop" in cmsg.words:
-            await message.channel.send("beep")
-            return
-
     # Log debug string
     base.LOGGER.debug(cmsg.dbgstring())
 
@@ -167,9 +158,9 @@ async def on_message(message):
 
 
 async def admin_commands(cmsg):
-    if "!dbg" in cmsg.raw:
+    if "!dbg" in cmsg.raw_lower:
         await cmsg.respond(cmsg.dbgstring())
-    elif "!reloadcli" in cmsg.raw:
+    elif "!reloadcli" in cmsg.raw_lower:
         try:
             __reload_cli__()
             resp = CLI.reload_message()
@@ -221,6 +212,17 @@ def load_token():
         raise RuntimeError("Failed to load token file, please check if it exists: " + str(TOKEN_FILE_NAME))
 
 
+async def beep_boop(cmsg):
+    remapping = {"o": "e", "O": "E", "e": "o", "E": "O"}
+    response = ""
+    for char in cmsg.raw:
+        if char in remapping:
+            response += remapping[char]
+        else:
+            response += char
+    await cmsg.respond(response)
+
+
 RULES = {
     "global": [
         # main, exclusive rules
@@ -244,7 +246,9 @@ RULES = {
         ),
         base.Rule(["morning", "myrming"], base.Rule.FLAGS_ONE_OF, base.SimpleReaction(base.EMOJI_SUN)),
         base.Rule("night", base.Rule.FLAGS_ALL, base.SimpleReaction(base.EMOJI_MOON)),
-        base.Rule(["greeting", "farewell"], base.Rule.FLAGS_ONE_OF, base.SimpleReaction(base.EMOJI_WAVE))
+        base.Rule(["greeting", "farewell"], base.Rule.FLAGS_ONE_OF, base.SimpleReaction(base.EMOJI_WAVE)),
+
+        base.Rule(["beep", "boop"], base.Rule.CONTAINS_ONE_OF, base.AsyncFuncCall(beep_boop))
     ]
 }
 

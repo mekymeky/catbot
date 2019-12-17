@@ -8,7 +8,8 @@ UNCERTAIN_QUESTIONS_ENABLED = True
 
 class CatbotMessage:
     def __init__(self, bot, discord_msg):
-        self.raw = self.trim_spaces(discord_msg.content.lower()).strip()
+        self.raw = discord_msg.content.strip()
+        self.raw_lower = self.raw.lower()
         self.msg = self.clean_msg(discord_msg.content)
         self.discord_msg = discord_msg
         self.words = self.msg.split()
@@ -71,7 +72,7 @@ class CatbotMessage:
             return False
 
         for w in wlist:
-            if not (w in self.raw):
+            if not (w in self.raw_lower):
                 return False
         return True
 
@@ -99,16 +100,16 @@ class CatbotMessage:
                 self.flags["inquiry"] = True
                 self.flags["question"] = True
 
-        if ((self.raw.startswith("<@439045787041660928>") or self.raw.startswith(" <@439045787041660928>")) and (
-                self.raw.endswith("?") or self.raw.endswith("? "))) or self.raw.endswith(
-                "?<@439045787041660928>") or self.raw.endswith("? <@439045787041660928>") or self.raw.endswith(
-                "?  <@439045787041660928>") or self.raw.endswith("<@439045787041660928> ?") or self.raw.endswith(
+        if ((self.raw_lower.startswith("<@439045787041660928>") or self.raw_lower.startswith(" <@439045787041660928>")) and (
+                self.raw_lower.endswith("?") or self.raw.endswith("? "))) or self.raw_lower.endswith(
+                "?<@439045787041660928>") or self.raw_lower.endswith("? <@439045787041660928>") or self.raw_lower.endswith(
+                "?  <@439045787041660928>") or self.raw_lower.endswith("<@439045787041660928> ?") or self.raw_lower.endswith(
                 "<@439045787041660928>?"):
             print("vague question")
             self.flags["inquiry"] = True
 
         if len(self.msg) > 3:
-            suffix = self.raw[-4::]
+            suffix = self.raw_lower[-4::]
             if "?" in suffix:
                 self.flags["question"] = True
             if "!" in suffix:
