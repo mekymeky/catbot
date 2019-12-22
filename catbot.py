@@ -13,7 +13,7 @@ import dogapi
 import botbase as base
 from cbmessage import CatbotMessage
 
-VERSION = "2.0.1"
+VERSION = "2.0.2"
 
 CURR = 0
 
