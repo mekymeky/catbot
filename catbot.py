@@ -13,7 +13,15 @@ import dogapi
 import botbase as base
 from cbmessage import CatbotMessage
 
-VERSION = "2.0.2"
+VERSION = "2.0.3"
+
+"""
+TODO
+
+- new type of rule CountRule - greater/less/eq/..., chars/words
+- poll feature (use embed)
+
+"""
 
 CURR = 0
 
@@ -175,6 +183,11 @@ def dice_roll(cmsg):
         rollmsg = rollmsg[1:-1]
     return rollmsg
 
+	
+async def identity(cmsg):
+    await cmsg.send_file("", discord.File("resources/bot.png"))
+    await cmsg.respond("Bot.")
+
 
 async def wise_response(cmsg):
     await cmsg.react(base.EMOJI_THINK)
@@ -256,6 +269,14 @@ RULES = {
         base.Rule("!roll ", base.Rule.STARTS_WITH, base.StrFuncCall(dice_roll)),
         base.Rule(["!cat", "!kitte", "!kitty", "!meow", "!kat"], base.Rule.STARTS_WITH, catapi.CatApi()),
         base.Rule(["!dog", "!woof", "!bark", "!bork"], base.Rule.STARTS_WITH, dogapi.DogApi()),
+
+		# identity rule
+        base.RuleOp.rules_and().rules(
+            base.AsyncFuncCall(identity),
+            base.Rule("mentioned", base.Rule.FLAGS_ALL, None),
+            base.Rule(["question", "inquiry" "indirect_inquiry"], base.Rule.FLAGS_ONE_OF, None),
+            base.Rule("who are you", base.Rule.CONTAINS_ALL, None)
+        ),
 
         # reaction rules
         base.RuleOp.rules_and().rules(

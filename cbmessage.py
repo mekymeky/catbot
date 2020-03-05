@@ -43,6 +43,9 @@ class CatbotMessage:
     async def respond(self, response):
         await self.discord_msg.channel.send(response)
 
+    async def send_file(self, text, file):
+        await self.discord_msg.channel.send(text, file=file)
+
     async def react(self, reaction):
         await self.discord_msg.add_reaction(reaction)
 
