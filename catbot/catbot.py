@@ -3,17 +3,15 @@
 import discord
 import random
 import datetime
-import macromodule as macro
-import catbotcli
 import dice
 import importlib
-import aimodule
-import catapi
-import dogapi
-import botbase as base
-from cbmessage import CatbotMessage
+import catbot.botbase as base
+import catbot.macromodule as macro
+import catbot.aimodule as aimodule, catbot.catbotcli as catbotcli, catbot.dogapi as dogapi, catbot.catapi as catapi
+from catbot.cbmessage import CatbotMessage
+from catbot.ai.vision import CatbotVision, HasImageRule
 
-VERSION = "2.0.3"
+VERSION = "2.1.0"
 
 """
 TODO
@@ -28,6 +26,7 @@ CURR = 0
 BOT = discord.Client()
 CLI = catbotcli.CatCLI()
 AIM = aimodule.AIModule()
+CAT_VISION = CatbotVision(enabled=True)
 
 LASTDAY = None
 
@@ -183,7 +182,7 @@ def dice_roll(cmsg):
         rollmsg = rollmsg[1:-1]
     return rollmsg
 
-	
+
 async def identity(cmsg):
     await cmsg.send_file("", discord.File("resources/bot.png"))
     await cmsg.respond("Bot.")
@@ -270,7 +269,10 @@ RULES = {
         base.Rule(["!cat", "!kitte", "!kitty", "!meow", "!kat"], base.Rule.STARTS_WITH, catapi.CatApi()),
         base.Rule(["!dog", "!woof", "!bark", "!bork"], base.Rule.STARTS_WITH, dogapi.DogApi()),
 
-		# identity rule
+        # vision
+        HasImageRule(CAT_VISION),
+
+        # identity rule
         base.RuleOp.rules_and().rules(
             base.AsyncFuncCall(identity),
             base.Rule("mentioned", base.Rule.FLAGS_ALL, None),
@@ -292,4 +294,6 @@ RULES = {
     ]
 }
 
-BOT.run(load_token())
+
+def run():
+    BOT.run(load_token())

@@ -17,7 +17,7 @@ def reload():
 
     FILE_LOCK.acquire()
     try:
-        f = open("macros.p", "rb")
+        f = open("../macros.p", "rb")
         MACRO_TABLE = pickle.load(f)
         f.close()
     except Exception as ex:
@@ -33,7 +33,7 @@ def write():
     global FILE_LOCK
     FILE_LOCK.acquire()
     try:
-        f = open("macros.p", "wb")
+        f = open("../macros.p", "wb")
         pickle.dump(MACRO_TABLE, f)
         f.close()
         MACRO_RELOAD = True

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python3.6 catbot.py
+python3.6 runbot.py

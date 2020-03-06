@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from cbmessage import CatbotMessage
+from catbot.cbmessage import CatbotMessage
 
 BOT_UID = "<@439045787041660928>"
 
@@ -10,6 +10,7 @@ EMOJI_HEART = "❤"
 EMOJI_WAVE = "👋"
 EMOJI_SUN = "🌞"
 EMOJI_MOON = "🌘"
+EMOJI_CAT = "🐱"
 EMOJI_BLOBCATNOTLIKE = "<:blobcatnotlike:618892026930397214>"
 EMOJI_BLOBCATGOOGLYGUN = "<:blobcatgooglygun:618892026687127552>"
 EMOJI_ANGELBLOBCAT = "<:angelblobcat:618892026284343316>"

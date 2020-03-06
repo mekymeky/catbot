@@ -1,5 +1,5 @@
 import requests
-import botbase as base
+import catbot.botbase as base
 
 
 class CatApi(base.AsyncModule):
