@@ -5,6 +5,8 @@ import discord
 import random
 import datetime
 import dice
+import os
+import asyncio
 import importlib
 import catbot.botbase as base
 import catbot.macromodule as macro
@@ -24,17 +26,19 @@ TODO
 
 """
 
+TOKEN_FILE_NAME = "discord_token"
+DISABLE_AI_FILE_NAME = "disable_ai"
+CMD = "$cat$"
+
 CURR = 0
+DISABLE_AI = os.path.exists(DISABLE_AI_FILE_NAME)
 
 BOT = discord.Client()
 CLI = catbotcli.CatCLI()
 AIM = aimodule.AIModule()
-CAT_VISION = CatbotVision(enabled=True)
+CAT_VISION = CatbotVision(enabled=not DISABLE_AI)
 
 LASTDAY = None
-
-TOKEN_FILE_NAME = "discord_token"
-CMD = "$cat$"
 
 
 def __reload_cli__():
@@ -99,6 +103,8 @@ async def get_help_message(cmsg):
     cp = cmsg.command_prefix
     e = discord.Embed(title="Available commands", color=0x5bad8b)
     e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
+    embed_ln(e, "!catbot quiet true/false", "Enables or disables quiet mode.")
+    embed_ln(e, "!catbot prefix PREFIX", "Changes command prefix to PREFIX.")
     embed_ln(e, cp + "macros", "List defined macros.")
     embed_ln(e, cp + "define MACRO_NAME CONTENT", "Define a new macro.")
     embed_ln(e, cp + "undefine MACRO_NAME", "Undefine macro.")
@@ -113,34 +119,58 @@ async def get_help_message(cmsg):
     await cmsg.embed(e)
 
 
+def set_quiet_mode(config, server_id, value):
+    config["quiet_mode"] = value
+    CatbotConfig.commit_config(server_id, config)
+
+
+# TODO probs refactor and move somewhere else (cli?)
 async def catbot_command(cmsg):
-    print(cmsg.words)
+    # system commands
     if len(cmsg.words) == 1:
         await get_help_message(cmsg)
         return
-    elif len(cmsg.words) == 2:
+    elif len(cmsg.words) >= 2:
+        # explicit catbot help
         if cmsg.words[1].lower() in ["hlep", "help"]:
             await get_help_message(cmsg)
             return
-    elif len(cmsg.words) >= 3:
-        print("OK")
-        if cmsg.words[1].lower() == "prefix":
-            print("OK-OK")
+        # prefix change
+        elif cmsg.words[1].lower() == "prefix":
             start_ind = cmsg.raw_lower.index("prefix") + len("prefix") + 1
-            cmsg.config["command_prefix"] = cmsg.raw_lower[start_ind:]
+            prefix = cmsg.raw_lower[start_ind:]
+            if prefix == "":
+                prefix = "!"
+            cmsg.config["command_prefix"] = prefix
             CatbotConfig.commit_config(cmsg.server_id, cmsg.config)
             await cmsg.respond("Command prefix changed to \"{}\"".format(cmsg.config["command_prefix"]))
             return
+        # quiet mode change
+        elif cmsg.words[1].lower() == "quiet":
+            start_ind = cmsg.raw_lower.index("quiet") + len("quiet") + 1
+            quietstr = cmsg.raw_lower[start_ind:].lower().strip()
+            if quietstr in ["true", "1", "yes"]:
+                quiet_mode = True
+            elif quietstr in ["false", "0", "no"]:
+                quiet_mode = False
+            else:
+                await cmsg.respond("Invalid quiet mode value, specify true or false")
+                return
+            set_quiet_mode(cmsg.config, cmsg.server_id, quiet_mode)
+            await cmsg.respond("Quiet mode " + ("enabled." if quiet_mode else "disabled."))
 
 
 async def get_introspection_result(cmsg):
     aim_accessible = AIM.test()
-    e = discord.Embed(title="Internal state", color=0xf3c24a, description="(Not yet implemented)")
+    e = discord.Embed(title="Internal state", color=0xf3c24a, description="(debug information)")
     e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
-    embed_ln(e, "name", str(cmsg.bot_name))
-    embed_ln(e, "nickname", str(cmsg.bot_nickname))
-    embed_ln(e, "version", VERSION)
+    embed_ln(e, "Name", str(cmsg.bot_name))
+    embed_ln(e, "Nickname", str(cmsg.bot_nickname))
+    embed_ln(e, "Version", VERSION)
     embed_ln(e, "AIM accessible", str(aim_accessible))
+    embed_ln(e, "Cat vision enabled", str(CAT_VISION.enabled))
+    embed_ln(e, "Command prefix", str(cmsg.config.get("command_prefix", "!")))
+    embed_ln(e, "Quiet mode", str(cmsg.config.get("quiet_mode", False)))
     e.set_footer(text=cmsg.bot_name + " version " + VERSION)
     await cmsg.embed(e)
 
@@ -153,6 +183,46 @@ def rewrite_command_prefix(raw_content, prefix):
         return CMD + raw_content[start_ind + len(prefix_lower):]
     else:
         return raw_content
+
+
+@BOT.event
+async def on_member_join(member):
+    print("Member joined:", member.display_name)
+    if member.bot:
+        system_channel = member.guild.system_channel
+        if system_channel is not None:
+            await system_channel.send("Hello {}! {}".format(member.display_name, base.EMOJI_BLOBCATWAVE))
+            await system_channel.send("For better compatibility with more bots, you can set quiet mode by issuing "
+                                      "the following command:\n`!catbot quiet 1`")
+
+
+@BOT.event
+async def on_guild_join(guild):
+    print("Joined a new server:", guild.name)
+    system_channel = guild.system_channel
+    if system_channel is not None:
+        await system_channel.send("HI! Am catbot.")
+        bot_members = list(filter(lambda member: member.bot and member != BOT.user, guild.members))
+        if len(bot_members) > 0:
+            await asyncio.sleep(2)
+            await system_channel.send("More bots! " + base.EMOJI_BLOBCATSHOCKED)
+            for bot in bot_members:
+                await system_channel.send("Hi {}!".format(bot.display_name))
+            await system_channel.send(base.EMOJI_BLOBCATWAVE)
+            await system_channel.send("\nI will go into quiet mode now to prevent conflicts with my other robotic " +
+                                      "frens. \nIf you wish to disable quiet mode, issue the following command:" +
+                                      "\n`!catbot quiet false`" +
+                                      "\n(But be warned! This can have terrible consequences. " +
+                                      "Potentially the end of the world.)" +
+                                      "\n\nI'm also setting my command prefix to be \"!cb\". To change it, you can " +
+                                      "use `!catbot prefix PREFIX`"
+                                      "\n\nFor more information, type `!catbot help`")
+            # change settings
+            server_id = str(guild.id)
+            config = CatbotConfig.get_config(server_id)
+            config["command_prefix"] = "!cb"
+            # set_quiet_mode will also commit the config
+            set_quiet_mode(config, str(server_id), True)
 
 
 @BOT.event
@@ -282,6 +352,15 @@ async def beep_boop(cmsg):
     await cmsg.respond(response)
 
 
+class IsQuietRule(base.Rule):
+
+    def __init__(self):
+        super().__init__(None, base.Rule.CUSTOM, base.NOP_MODULE)
+
+    def check(self, cmsg):
+        return cmsg.config.get("quiet_mode", False)
+
+
 class BeepBoopRule(base.Rule):
 
     def __init__(self, module):
@@ -325,7 +404,7 @@ RULES = {
         base.RuleOp.rules_and().rules(
             base.AsyncFuncCall(identity),
             base.Rule("mentioned", base.Rule.FLAGS_ALL, None),
-            base.Rule(["question", "inquiry" "indirect_inquiry"], base.Rule.FLAGS_ONE_OF, None),
+            base.Rule(["question", "inquiry", "indirect_inquiry"], base.Rule.FLAGS_ONE_OF, None),
             base.Rule("who are you", base.Rule.CONTAINS_ALL, None)
         ),
 
@@ -333,8 +412,13 @@ RULES = {
         base.RuleOp.rules_and().rules(
             base.AsyncFuncCall(wise_response),
             base.Rule("mentioned", base.Rule.FLAGS_ALL, None),
-            base.Rule(["question", "inquiry" "indirect_inquiry"], base.Rule.FLAGS_ONE_OF, None)
+            base.Rule(["question", "inquiry", "indirect_inquiry"], base.Rule.FLAGS_ONE_OF, None)
         ),
+
+        # quiet mode abort point
+        IsQuietRule(),
+
+        # no mention rules
         base.Rule(["morning", "myrming"], base.Rule.FLAGS_ONE_OF, base.SimpleReaction(base.EMOJI_SUN)),
         base.Rule("night", base.Rule.FLAGS_ALL, base.SimpleReaction(base.EMOJI_MOON)),
         base.Rule(["greeting", "farewell"], base.Rule.FLAGS_ONE_OF, base.SimpleReaction(base.EMOJI_WAVE)),
@@ -345,4 +429,6 @@ RULES = {
 
 
 def run():
+    if DISABLE_AI:
+        print("AI disabled - file \"{}\" is present".format(DISABLE_AI_FILE_NAME))
     BOT.run(load_token())

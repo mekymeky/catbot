@@ -14,6 +14,8 @@ EMOJI_CAT = "🐱"
 EMOJI_BLOBCATNOTLIKE = "<:blobcatnotlike:618892026930397214>"
 EMOJI_BLOBCATGOOGLYGUN = "<:blobcatgooglygun:618892026687127552>"
 EMOJI_ANGELBLOBCAT = "<:angelblobcat:618892026284343316>"
+EMOJI_BLOBCATWAVE = "<:blobcatwave:635097814443229186>"
+EMOJI_BLOBCATSHOCKED = "<:blobcatshocked:635097816074813470>"
 
 
 class LogLevel:
@@ -180,6 +182,21 @@ class SimpleReaction(Module):
 
     async def run(self, cmsg):
         return Action(Action.END, reaction=self.reaction)
+
+
+class NOPModule(Module):
+    def __init__(self):
+        super().__init__("NOP", Module.NATIVE)
+
+    def validate(self):
+        pass
+
+    async def run(self, cmsg):
+        return NO_MESSAGE_ACTION
+
+
+NOP_MODULE = NOPModule()
+
 
 class Rule:
     MATCH = 0  # exactly matches conditions (depending on case sensitivity)
