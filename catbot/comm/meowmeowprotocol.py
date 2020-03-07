@@ -10,7 +10,6 @@ class MeowMeowProtocol(base.AsyncModule):
         if cmsg.raw.startswith(base.EMOJI_CAT + " meow"):
             e = Embed(title="Meow Meow Protocol Exception", color=0xff6459)
             e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
-            cp = cmsg.command_prefix
             e.add_field(name="RuntimeError", value="Not yet implemented", inline=False)
             e.set_footer(text=cmsg.bot_name + " version " + cmsg.version)
             await cmsg.embed(e)

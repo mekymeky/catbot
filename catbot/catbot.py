@@ -12,11 +12,11 @@ import catbot.botbase as base
 import catbot.macromodule as macro
 import catbot.aimodule as aimodule, catbot.catbotcli as catbotcli, catbot.dogapi as dogapi, catbot.catapi as catapi
 from catbot.cbmessage import CatbotMessage
-from catbot.ai.vision import CatbotVision, HasImageRule
+from catbot.ai.vision import CatbotVision, HasImageRule, CatbotVisionHistory
 from catbot.serverconfig import CatbotConfig
 from catbot.comm.meowmeowprotocol import MeowMeowProtocol
 
-VERSION = "2.1.1"
+VERSION = "2.1.2"
 
 """
 TODO
@@ -398,6 +398,7 @@ RULES = {
         base.Rule([CMD + "dog", CMD + "woof", CMD + "bark", CMD + "bork"], base.Rule.STARTS_WITH, dogapi.DogApi()),
 
         # vision
+        base.Rule(CMD + "vision history", base.Rule.CONTAINS_ALL, CatbotVisionHistory()),
         HasImageRule(CAT_VISION),
 
         # identity rule
