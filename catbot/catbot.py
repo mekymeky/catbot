@@ -1,5 +1,6 @@
 #!python3
 # -*- coding: utf-8 -*-
+
 import discord
 import random
 import datetime
@@ -10,8 +11,10 @@ import catbot.macromodule as macro
 import catbot.aimodule as aimodule, catbot.catbotcli as catbotcli, catbot.dogapi as dogapi, catbot.catapi as catapi
 from catbot.cbmessage import CatbotMessage
 from catbot.ai.vision import CatbotVision, HasImageRule
+from catbot.serverconfig import CatbotConfig
+from catbot.comm.meowmeowprotocol import MeowMeowProtocol
 
-VERSION = "2.1.0"
+VERSION = "2.1.1"
 
 """
 TODO
@@ -31,6 +34,7 @@ CAT_VISION = CatbotVision(enabled=True)
 LASTDAY = None
 
 TOKEN_FILE_NAME = "discord_token"
+CMD = "$cat$"
 
 
 def __reload_cli__():
@@ -92,20 +96,41 @@ def embed_ln(embed, name, value, inline=False):
 
 
 async def get_help_message(cmsg):
+    cp = cmsg.command_prefix
     e = discord.Embed(title="Available commands", color=0x5bad8b)
     e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
-    embed_ln(e, "!macros", "List defined macros.")
-    embed_ln(e, "!define MACRO_NAME CONTENT", "Define a new macro.")
-    embed_ln(e, "!undefine MACRO_NAME", "Undefine macro.")
+    embed_ln(e, cp + "macros", "List defined macros.")
+    embed_ln(e, cp + "define MACRO_NAME CONTENT", "Define a new macro.")
+    embed_ln(e, cp + "undefine MACRO_NAME", "Undefine macro.")
     embed_ln(e, "/MACRO_NAME [MACRO_NAME] ...", "Convert macro name to its content. Macros can be chained.")
-    embed_ln(e, "!roll DICE_DEF", "Roll the dice. Syntax can be found here: https://pypi.org/project/dice/ \nExample: !roll 3d5+1")
-    embed_ln(e, "!a TEXT", "Send text to the AI module.")
-    embed_ln(e, "!introspect", "Get bot state.")
-    embed_ln(e, "!cat", "Cat.")
-    embed_ln(e, "!dog", "Like cat, but dog.")
-    embed_ln(e, "!help", "Display this help text.")
+    embed_ln(e, cp + "roll DICE_DEF", "Roll the dice. Syntax can be found here: https://pypi.org/project/dice/ \nExample: !roll 3d5+1")
+    embed_ln(e, cp + "a TEXT", "Send text to the AI module.")
+    embed_ln(e, cp + "introspect", "Get bot state.")
+    embed_ln(e, cp + "cat", "Cat.")
+    embed_ln(e, cp + "dog", "Like cat, but dog.")
+    embed_ln(e, cp + "help", "Display this help text.")
     e.set_footer(text=cmsg.bot_name + " version " + VERSION)
     await cmsg.embed(e)
+
+
+async def catbot_command(cmsg):
+    print(cmsg.words)
+    if len(cmsg.words) == 1:
+        await get_help_message(cmsg)
+        return
+    elif len(cmsg.words) == 2:
+        if cmsg.words[1].lower() in ["hlep", "help"]:
+            await get_help_message(cmsg)
+            return
+    elif len(cmsg.words) >= 3:
+        print("OK")
+        if cmsg.words[1].lower() == "prefix":
+            print("OK-OK")
+            start_ind = cmsg.raw_lower.index("prefix") + len("prefix") + 1
+            cmsg.config["command_prefix"] = cmsg.raw_lower[start_ind:]
+            CatbotConfig.commit_config(cmsg.server_id, cmsg.config)
+            await cmsg.respond("Command prefix changed to \"{}\"".format(cmsg.config["command_prefix"]))
+            return
 
 
 async def get_introspection_result(cmsg):
@@ -120,17 +145,39 @@ async def get_introspection_result(cmsg):
     await cmsg.embed(e)
 
 
+def rewrite_command_prefix(raw_content, prefix):
+    raw_lower = raw_content.lower()
+    prefix_lower = prefix.lower()
+    if raw_lower.strip().startswith(prefix_lower):
+        start_ind = raw_lower.index(prefix_lower)
+        return CMD + raw_content[start_ind + len(prefix_lower):]
+    else:
+        return raw_content
+
+
 @BOT.event
 async def on_message(message):
     au = str(message.author)
-    cmsg = CatbotMessage(BOT, message)
-    rn = roll(1000)
-    print("rn:", rn)
-    print(cmsg.raw)
+    config = CatbotConfig.get_config(str(message.guild.id))
+    print("Retrieved cfg", config)
 
     # Ignore bot's own messages
     if message.author == BOT.user:
         return
+
+    # Rewrite commands according to server config
+    command_prefix = config.get("command_prefix", "!")
+    message.content = rewrite_command_prefix(message.content, command_prefix)
+
+    # print message content
+    try:
+        print(message.content)
+    except Exception as ex:
+        print(ex)
+
+    cmsg = CatbotMessage(BOT, message, config, VERSION)
+    rn = roll(1000)
+    print("rn:", rn)
 
     # Process message using available ruleset
     action = base.Action(base.Action.CONTINUE)
@@ -257,17 +304,19 @@ class BeepBoopRule(base.Rule):
 RULES = {
     "global": [
         # main, exclusive rules
-        base.Rule(["!help", "!hlep"], base.Rule.STARTS_WITH, base.AsyncFuncCall(get_help_message)),
-        base.Rule("!introspect", base.Rule.STARTS_WITH, base.AsyncFuncCall(get_introspection_result)),
-        base.Rule("!cli", base.Rule.STARTS_WITH, base.Module("Catbot CLI", base.Module.NATIVE, handler=CLI.handle)),
-        base.Rule("!define ", base.Rule.STARTS_WITH, base.FuncCall(macro.define)),
-        base.Rule("!undefine ", base.Rule.STARTS_WITH, base.FuncCall(macro.undefine)),
-        base.Rule("!macros", base.Rule.STARTS_WITH, base.StrFuncCall(macro.listmacros)),
+        base.Rule(base.EMOJI_CAT, base.Rule.STARTS_WITH, MeowMeowProtocol()),
+        base.Rule(["!catbot", CMD + "catbot"], base.Rule.STARTS_WITH, base.AsyncFuncCall(catbot_command)),
+        base.Rule([CMD + "help", CMD + "hlep"], base.Rule.STARTS_WITH, base.AsyncFuncCall(get_help_message)),
+        base.Rule(CMD + "introspect", base.Rule.STARTS_WITH, base.AsyncFuncCall(get_introspection_result)),
+        base.Rule(CMD + "cli", base.Rule.STARTS_WITH, base.Module("Catbot CLI", base.Module.NATIVE, handler=CLI.handle)),
+        base.Rule(CMD + "define ", base.Rule.STARTS_WITH, base.FuncCall(macro.define)),
+        base.Rule(CMD + "undefine ", base.Rule.STARTS_WITH, base.FuncCall(macro.undefine)),
+        base.Rule(CMD + "macros", base.Rule.STARTS_WITH, base.StrFuncCall(macro.listmacros)),
         base.Rule("/", base.Rule.STARTS_WITH, base.AsyncFuncCall(process_macro)),
-        base.Rule("!a ", base.Rule.STARTS_WITH, base.AsyncFuncCall(ai_process)),
-        base.Rule("!roll ", base.Rule.STARTS_WITH, base.StrFuncCall(dice_roll)),
-        base.Rule(["!cat", "!kitte", "!kitty", "!meow", "!kat"], base.Rule.STARTS_WITH, catapi.CatApi()),
-        base.Rule(["!dog", "!woof", "!bark", "!bork"], base.Rule.STARTS_WITH, dogapi.DogApi()),
+        base.Rule(CMD + "a ", base.Rule.STARTS_WITH, base.AsyncFuncCall(ai_process)),
+        base.Rule(CMD + "roll ", base.Rule.STARTS_WITH, base.StrFuncCall(dice_roll)),
+        base.Rule([CMD + "cat", CMD + "kitte", CMD + "kitty", CMD + "meow", CMD + "kat"], base.Rule.STARTS_WITH, catapi.CatApi()),
+        base.Rule([CMD + "dog", CMD + "woof", CMD + "bark", CMD + "bork"], base.Rule.STARTS_WITH, dogapi.DogApi()),
 
         # vision
         HasImageRule(CAT_VISION),

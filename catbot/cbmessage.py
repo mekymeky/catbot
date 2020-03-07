@@ -7,13 +7,13 @@ UNCERTAIN_QUESTIONS_ENABLED = True
 
 
 class CatbotMessage:
-    def __init__(self, bot, discord_msg):
+    def __init__(self, bot, discord_msg, config, version):
         self.raw = discord_msg.content.strip()
         self.raw_lower = self.raw.lower()
         self.msg = self.clean_msg(discord_msg.content)
         self.discord_msg = discord_msg
         self.words = self.msg.split()
-        self.server_id = discord_msg.guild.id
+        self.server_id = str(discord_msg.guild.id)
         self.bot = bot
         self.bot_name = bot.user.name
         self.bot_nickname = discord_msg.guild.me.nick
@@ -21,6 +21,9 @@ class CatbotMessage:
             self.bot_nickname = self.bot_name
         self.author = str(discord_msg.author)
         self.channel = str(discord_msg.channel)
+        self.config = config
+        self.command_prefix = config.get("command_prefix", "!")
+        self.version = version
 
         self.flags = {
             "mentioned": False,

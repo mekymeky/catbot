@@ -1,50 +1,8 @@
-import pickle
-import threading
-
-MACRO_RELOAD = True
-MACRO_TABLE = {}
-MACRO_LOCK = threading.Semaphore()
-FILE_LOCK = threading.Semaphore()
-
-
-def reload():
-    global MACRO_RELOAD
-    global MACRO_TABLE
-    global FILE_LOCK
-
-    if not MACRO_RELOAD:
-        return
-
-    FILE_LOCK.acquire()
-    try:
-        f = open("../macros.p", "rb")
-        MACRO_TABLE = pickle.load(f)
-        f.close()
-    except Exception as ex:
-        print(ex)
-    FILE_LOCK.release()
-
-    MACRO_RELOAD = False
-
-
-def write():
-    global MACRO_RELOAD
-    global MACRO_TABLE
-    global FILE_LOCK
-    FILE_LOCK.acquire()
-    try:
-        f = open("../macros.p", "wb")
-        pickle.dump(MACRO_TABLE, f)
-        f.close()
-        MACRO_RELOAD = True
-    except Exception as ex:
-        print(ex)
-    FILE_LOCK.release()
+from catbot.serverconfig import CatbotConfig
 
 
 def run(cmsg, macro_variable):
-    global MACRO_TABLE
-    reload()
+    macro_table = cmsg.config.get("macros", {})
     if not macro_variable:
         return ""
 
@@ -52,58 +10,42 @@ def run(cmsg, macro_variable):
         macroname = macro_variable[1::]
     else:
         macroname = macro_variable
-    try:
-        return MACRO_TABLE[cmsg.server_id][macroname]
-    except Exception as ex:
-        print(ex)
-        return ""
+    return macro_table.get(macroname, "")
 
 
 def define(cmsg):
-    global MACRO_TABLE
-    global MACRO_LOCK
+    macro_table = cmsg.config.get("macros", {})
     tmp = cmsg.raw.split(" ")
-    MACRO_LOCK.acquire()
     try:
         tmp.pop(0)
         macroname = tmp.pop(0)
         macrotext = " ".join(tmp)
-        if not (cmsg.server_id in MACRO_TABLE):
-            MACRO_TABLE[cmsg.server_id] = {}
-        MACRO_TABLE[cmsg.server_id][macroname] = macrotext
-        write()
+        macro_table[macroname] = macrotext
+        cmsg.config["macros"] = macro_table
+        CatbotConfig.commit_config(cmsg.server_id, cmsg.config)
     except Exception as ex:
         print(ex)
-    MACRO_LOCK.release()
 
 
 def undefine(cmsg):
-    global MACRO_TABLE
-    global MACRO_LOCK
-    MACRO_LOCK.acquire()
+    macro_table = cmsg.config.get("macros", {})
     try:
         macronames = cmsg.raw[10::].split(" ")
         for macroname in macronames:
-            if cmsg.server_id in MACRO_TABLE:
-                del(MACRO_TABLE[cmsg.server_id][macroname])
-        write()
+            if macroname in macro_table:
+                del(macro_table[macroname])
+        CatbotConfig.commit_config(cmsg.server_id, cmsg.config)
     except Exception as ex:
         print(ex)
-    MACRO_LOCK.release()
 
 
 def listmacros(cmsg):
-    global MACRO_TABLE
-    global MACRO_LOCK
-    reload()
-    MACRO_LOCK.acquire()
+    macro_table = cmsg.config.get("macros", {})
     try:
-        names = MACRO_TABLE[cmsg.server_id].keys()
-        MACRO_LOCK.release()
+        names = macro_table.keys()
         if len(names) == 0:
             return "No macros defined."
         return ", ".join(names)
     except Exception as ex:
-        MACRO_LOCK.release()
         print(ex)
         return "No macros defined."
