@@ -84,10 +84,10 @@ class CatbotVision(base.AsyncModule):
 
     @staticmethod
     def update_history(cmsg, timestamp, processing_time, confidence):
-        if len(CatbotVision.history) > CatbotVision.max_history_len:
-            CatbotVision.history = CatbotVision.history[1:]
         if cmsg.server_id not in CatbotVision.history:
             CatbotVision.history[cmsg.server_id] = []
+        if len(CatbotVision.history[cmsg.server_id]) > CatbotVision.max_history_len:
+            CatbotVision.history[cmsg.server_id] = CatbotVision.history[cmsg.server_id][1:]
         CatbotVision.history[cmsg.server_id].append([timestamp, processing_time, confidence])
 
     def predict_image(self, cmsg, image):
