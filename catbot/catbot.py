@@ -16,7 +16,7 @@ from catbot.ai.vision import CatbotVision, HasImageRule, CatbotVisionHistory
 from catbot.serverconfig import CatbotConfig
 from catbot.comm.meowmeowprotocol import MeowMeowProtocol
 
-VERSION = "2.1.2"
+VERSION = "2.1.3"
 
 """
 TODO
@@ -179,7 +179,8 @@ async def get_introspection_result(cmsg):
 def rewrite_command_prefix(raw_content, prefix):
     raw_lower = raw_content.lower()
     prefix_lower = prefix.lower()
-    if raw_lower.strip().startswith(prefix_lower):
+    raw_lower_stripped = raw_lower.strip()
+    if raw_lower_stripped.startswith(prefix_lower) and not raw_lower_stripped.startswith("!catbot"):
         start_ind = raw_lower.index(prefix_lower)
         return CMD + raw_content[start_ind + len(prefix_lower):]
     else:

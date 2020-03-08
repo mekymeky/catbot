@@ -86,7 +86,7 @@ class CatbotVision(base.AsyncModule):
     def update_history(cmsg, timestamp, processing_time, confidence):
         if cmsg.server_id not in CatbotVision.history:
             CatbotVision.history[cmsg.server_id] = []
-        if len(CatbotVision.history[cmsg.server_id]) > CatbotVision.max_history_len:
+        if len(CatbotVision.history[cmsg.server_id]) >= CatbotVision.max_history_len:
             CatbotVision.history[cmsg.server_id] = CatbotVision.history[cmsg.server_id][1:]
         CatbotVision.history[cmsg.server_id].append([timestamp, processing_time, confidence])
 
