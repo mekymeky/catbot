@@ -114,6 +114,7 @@ async def get_help_message(cmsg):
     embed_ln(e, cp + "introspect", "Get bot state.")
     embed_ln(e, cp + "cat", "Cat.")
     embed_ln(e, cp + "dog", "Like cat, but dog.")
+    embed_ln(e, cp + "vision history", "Show log of vision events with timestamps, processing time and confidence.")
     embed_ln(e, cp + "help", "Display this help text.")
     e.set_footer(text=cmsg.bot_name + " version " + VERSION)
     await cmsg.embed(e)
