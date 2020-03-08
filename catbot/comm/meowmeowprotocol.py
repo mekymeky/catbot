@@ -8,9 +8,11 @@ class MeowMeowProtocol(base.AsyncModule):
 
     async def handle(self, cmsg):
         if cmsg.raw.startswith(base.EMOJI_CAT + " meow"):
-            e = Embed(title="Meow Meow Protocol Exception", color=0xff6459)
+            cmsg.config["mmp_channel"] = cmsg.channel
+
+            e = Embed(title="Meow Meow Protocol", color=base.COLOR_GREEN)
             e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
-            e.add_field(name="RuntimeError", value="Not yet implemented", inline=False)
+            e.add_field(name="Success", value="Channel registered", inline=False)
             e.set_footer(text=cmsg.bot_name + " version " + cmsg.version)
             await cmsg.embed(e)
         # TODO

@@ -101,7 +101,7 @@ def embed_ln(embed, name, value, inline=False):
 
 async def get_help_message(cmsg):
     cp = cmsg.command_prefix
-    e = discord.Embed(title="Available commands", color=0x5bad8b)
+    e = discord.Embed(title="Available commands", color=base.COLOR_MAIN)
     e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
     embed_ln(e, "!catbot quiet true/false", "Enables or disables quiet mode.")
     embed_ln(e, "!catbot prefix PREFIX", "Changes command prefix to PREFIX.")
@@ -163,7 +163,7 @@ async def catbot_command(cmsg):
 
 async def get_introspection_result(cmsg):
     aim_accessible = AIM.test()
-    e = discord.Embed(title="Internal state", color=0xf3c24a, description="(debug information)")
+    e = discord.Embed(title="Internal state", color=base.COLOR_ORANGE, description="(debug information)")
     e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
     embed_ln(e, "Name", str(cmsg.bot_name))
     embed_ln(e, "Nickname", str(cmsg.bot_nickname))
@@ -172,6 +172,7 @@ async def get_introspection_result(cmsg):
     embed_ln(e, "Cat vision enabled", str(CAT_VISION.enabled))
     embed_ln(e, "Command prefix", str(cmsg.config.get("command_prefix", "!")))
     embed_ln(e, "Quiet mode", str(cmsg.config.get("quiet_mode", False)))
+    embed_ln(e, "Meowmeow protocol channel", str(cmsg.config.get("mmp_channel", None)))
     e.set_footer(text=cmsg.bot_name + " version " + VERSION)
     await cmsg.embed(e)
 
