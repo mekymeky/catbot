@@ -2,6 +2,7 @@
 
 import asyncio
 import discord
+from catbot.serverconfig import CatbotConfig
 
 UNCERTAIN_QUESTIONS_ENABLED = True
 
@@ -66,6 +67,9 @@ class CatbotMessage:
 
     async def delete(self):
         await self.discord_msg.delete()
+
+    def commit_config(self):
+        CatbotConfig.commit_config(self.server_id, self.config)
 
     def get_default_embed(self):
         embed = discord.Embed()

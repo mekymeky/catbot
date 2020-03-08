@@ -9,6 +9,7 @@ class MeowMeowProtocol(base.AsyncModule):
     async def handle(self, cmsg):
         if cmsg.raw.startswith(base.EMOJI_CAT + " meow"):
             cmsg.config["mmp_channel"] = cmsg.channel
+            cmsg.commit_config()
 
             e = Embed(title="Meow Meow Protocol", color=base.COLOR_GREEN)
             e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))

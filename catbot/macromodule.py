@@ -1,5 +1,3 @@
-from catbot.serverconfig import CatbotConfig
-
 
 def run(cmsg, macro_variable):
     macro_table = cmsg.config.get("macros", {})
@@ -22,7 +20,7 @@ def define(cmsg):
         macrotext = " ".join(tmp)
         macro_table[macroname] = macrotext
         cmsg.config["macros"] = macro_table
-        CatbotConfig.commit_config(cmsg.server_id, cmsg.config)
+        cmsg.commit_config()
     except Exception as ex:
         print(ex)
 
@@ -34,7 +32,7 @@ def undefine(cmsg):
         for macroname in macronames:
             if macroname in macro_table:
                 del(macro_table[macroname])
-        CatbotConfig.commit_config(cmsg.server_id, cmsg.config)
+        cmsg.commit_config()
     except Exception as ex:
         print(ex)
 

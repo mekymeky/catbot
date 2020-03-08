@@ -143,7 +143,7 @@ async def catbot_command(cmsg):
             if prefix == "":
                 prefix = "!"
             cmsg.config["command_prefix"] = prefix
-            CatbotConfig.commit_config(cmsg.server_id, cmsg.config)
+            cmsg.commit_config()
             await cmsg.respond("Command prefix changed to \"{}\"".format(cmsg.config["command_prefix"]))
             return
         # quiet mode change
