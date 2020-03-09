@@ -295,9 +295,9 @@ async def set_status(status):
         ssplit = status.split("#")
         emoji = ssplit[0]
         status = ssplit[1]
-        activity = discord.activity.CustomActivity(status, emoji=emoji)
+        activity = discord.CustomActivity(status, emoji=emoji)
     else:
-        activity = discord.activity.CustomActivity(status)
+        activity = discord.CustomActivity(status)
 
     print("[ADMIN] - Updating status:", status, activity)
     await BOT.change_presence(activity=activity)
@@ -318,10 +318,27 @@ async def admin_commands(cmsg):
     elif filtered.startswith("status"):
         if filtered == "status":
             await set_status(None)
-            return
         else:
             start_ind = cmsg.raw_lower.index("status") + len("status") + 1
             await set_status(cmsg.raw[start_ind:])
+    elif filtered.startswith("playing"):
+        if filtered == "playing":
+            await BOT.change_presence()
+        else:
+            start_ind = cmsg.raw_lower.index("playing") + len("playing") + 1
+            await BOT.change_presence(activity=discord.Game(cmsg.raw[start_ind:]))
+    elif filtered.startswith("listening"):
+        if filtered == "listening":
+            await BOT.change_presence()
+        else:
+            start_ind = cmsg.raw_lower.index("listening") + len("listening") + 1
+            await BOT.change_presence(activity=discord.Spotify(details=cmsg.raw[start_ind:]))
+    elif filtered.startswith("streaming"):
+        if filtered == "streaming":
+            await BOT.change_presence()
+        else:
+            start_ind = cmsg.raw_lower.index("streaming") + len("streaming") + 1
+            await BOT.change_presence(activity=discord.Streaming(name=cmsg.raw[start_ind:], url=""))
 
 
 
