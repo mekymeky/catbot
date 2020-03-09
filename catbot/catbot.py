@@ -6,6 +6,8 @@ import random
 import datetime
 import dice
 import os
+import time
+from datetime import datetime
 import asyncio
 import importlib
 import catbot.botbase as base
@@ -39,6 +41,7 @@ AIM = aimodule.AIModule()
 CAT_VISION = CatbotVision(enabled=not DISABLE_AI)
 
 LASTDAY = None
+BOOT_TIMESTAMP = time.time()
 
 
 def __reload_cli__():
@@ -163,7 +166,8 @@ async def catbot_command(cmsg):
 
 async def get_introspection_result(cmsg):
     aim_accessible = AIM.test()
-    e = discord.Embed(title="Internal state", color=base.COLOR_ORANGE, description="(debug information)")
+    e = discord.Embed(title="Internal state", color=base.COLOR_ORANGE,
+                      description="Running since "+str(datetime.fromtimestamp(BOOT_TIMESTAMP)))
     e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
     embed_ln(e, "Name", str(cmsg.bot_name))
     embed_ln(e, "Nickname", str(cmsg.bot_nickname))
@@ -230,7 +234,6 @@ async def on_guild_join(guild):
 
 @BOT.event
 async def on_message(message):
-    au = str(message.author)
     config = CatbotConfig.get_config(str(message.guild.id))
     print("Retrieved cfg", config)
 
@@ -251,6 +254,11 @@ async def on_message(message):
     cmsg = CatbotMessage(BOT, message, config, VERSION)
     rn = roll(1000)
     print("rn:", rn)
+
+    # admin override / TODO refactor - add user rule and create a module
+    if str(message.author) == "Meky#8888" and cmsg.raw_lower.startswith("!catbot admin"):
+        await admin_commands(cmsg)
+        return
 
     # Process message using available ruleset
     action = base.Action(base.Action.CONTINUE)
@@ -275,25 +283,44 @@ async def on_message(message):
     # Log debug string
     base.LOGGER.debug(cmsg.dbgstring())
 
-    # Admin commands
-    if au == "Meky#8888":
-        await admin_commands(cmsg)
-
     # Cookie reaction
     if rn == 1 and message.author != BOT.user:
         await message.add_reaction(base.EMOJI_COOKIE)
 
 
+async def set_status(status):
+    if status is None or status.strip() == "":
+        activity = None
+    elif "#" in status:
+        ssplit = status.split("#")
+        emoji = ssplit[0]
+        status = ssplit[1]
+        activity = discord.activity.CustomActivity(status, emoji=emoji)
+    else:
+        activity = discord.activity.CustomActivity(status)
+
+    await BOT.change_presence(activity=activity)
+
+
 async def admin_commands(cmsg):
-    if "!dbg" in cmsg.raw_lower:
+    filtered = cmsg.raw_lower[len("!catbot admin "):].strip()
+    if filtered.startswith("dbg"):
         await cmsg.respond(cmsg.dbgstring())
-    elif "!reloadcli" in cmsg.raw_lower:
+    elif filtered.startswith("reloadcli"):
         try:
             __reload_cli__()
             resp = CLI.reload_message()
         except Exception as err:
             resp = "`" + str(err) + "`"
         await cmsg.respond(resp)
+    elif filtered.startswith("status"):
+        if filtered == "status":
+            await set_status(None)
+            return
+        else:
+            start_ind = cmsg.raw_lower.index("status") + len("status") + 1
+            await set_status(cmsg.raw[start_ind:])
+
 
 
 def dice_roll(cmsg):
@@ -433,6 +460,8 @@ RULES = {
 
 
 def run():
+    global BOOT_TIMESTAMP
     if DISABLE_AI:
         print("AI disabled - file \"{}\" is present".format(DISABLE_AI_FILE_NAME))
+    BOOT_TIMESTAMP = time.time()
     BOT.run(load_token())
