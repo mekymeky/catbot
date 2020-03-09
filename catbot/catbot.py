@@ -299,10 +299,12 @@ async def set_status(status):
     else:
         activity = discord.activity.CustomActivity(status)
 
+    print("[ADMIN] - Updating status:", status, activity)
     await BOT.change_presence(activity=activity)
 
 
 async def admin_commands(cmsg):
+    print("[ADMIN] - Admin command received")
     filtered = cmsg.raw_lower[len("!catbot admin "):].strip()
     if filtered.startswith("dbg"):
         await cmsg.respond(cmsg.dbgstring())
