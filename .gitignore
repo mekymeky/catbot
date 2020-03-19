@@ -1,3 +1,4 @@
 /discord_token
 /models
 __pycache__
+*.pyc
