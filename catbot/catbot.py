@@ -443,6 +443,7 @@ RULES = {
         base.Rule("/", base.Rule.STARTS_WITH, base.AsyncFuncCall(process_macro)),
         base.Rule(CMD + "a ", base.Rule.STARTS_WITH, base.AsyncFuncCall(ai_process)),
         base.Rule(CMD + "roll ", base.Rule.STARTS_WITH, base.StrFuncCall(dice_roll)),
+        base.Rule(CMD + "seal", base.Rule.STARTS_WITH, base.SimpleMessage(base.EMOJI_SEALCLUB)),
         base.Rule([CMD + "cat", CMD + "kitte", CMD + "kitty", CMD + "meow", CMD + "kat"], base.Rule.STARTS_WITH, catapi.CatApi()),
         base.Rule([CMD + "dog", CMD + "woof", CMD + "bark", CMD + "bork"], base.Rule.STARTS_WITH, dogapi.DogApi()),
 
