@@ -174,7 +174,7 @@ class SimpleMessage(Module):
     def validate(self):
         assert self.message
 
-    def run(self, cmsg):
+    async def run(self, cmsg):
         return Action(Action.END, message=self.message)
 
 
