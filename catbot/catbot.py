@@ -341,9 +341,8 @@ async def admin_commands(cmsg):
             await BOT.change_presence(activity=discord.Streaming(name=cmsg.raw[start_ind:], url=""))
 
 
-
 def dice_roll(cmsg):
-    rollmsg = str(dice.roll(cmsg.raw[6::]))
+    rollmsg = str(dice.roll(cmsg.raw[10::]))
     if "[" in rollmsg and "]" in rollmsg:
         rollmsg = rollmsg[1:-1]
     return rollmsg
@@ -375,7 +374,7 @@ async def process_macro(cmsg):
 
 
 async def ai_process(cmsg):
-    response = AIM.process(cmsg.raw[3::])
+    response = AIM.process(cmsg.raw[7::])
     await cmsg.respond(response)
 
 
