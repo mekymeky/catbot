@@ -42,6 +42,7 @@ class CatbotSentiment(base.AsyncModule):
         outputs = self.interpreter.get_tensor(CatbotSentiment.OUTPUT_TENSOR)[0]
 
         await cmsg.respond(
-            f"Output tensor: [{base.EMOJI_AMGR} {outputs[0]}, {base.EMOJI_BLOBCATPRETTYGOOD} {outputs[1]}]"
+            f"Output tensor: [{base.EMOJI_AMGR} {round(outputs[0], 3)},"
+            f" {base.EMOJI_BLOBCATPRETTYGOOD} {round(outputs[1], 3)}]"
         )
 
