@@ -36,6 +36,9 @@ class CatbotSentiment(base.AsyncModule):
         self.interpreter.set_tensor(0, inputs[0])
         self.interpreter.set_tensor(1, inputs[1])
         self.interpreter.set_tensor(2, inputs[2])
+
+        self.interpreter.invoke()
+
         outputs = self.interpreter.get_tensor(CatbotSentiment.OUTPUT_TENSOR)[0]
 
         await cmsg.respond(
