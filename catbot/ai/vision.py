@@ -1,7 +1,7 @@
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-from tf.keras.models import load_model
+from tensorflow.keras.models import load_model
 #from keras_efficientnets import EfficientNetB5 # TODO compatible with TF2? if not, replace with official EFN, but will need retraining
 import time
 from discord import Embed
