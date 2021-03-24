@@ -15,10 +15,11 @@ import catbot.macromodule as macro
 import catbot.aimodule as aimodule, catbot.catbotcli as catbotcli, catbot.dogapi as dogapi, catbot.catapi as catapi
 from catbot.cbmessage import CatbotMessage
 from catbot.ai.vision import CatbotVision, HasImageRule, CatbotVisionHistory
+from catbot.ai.sentiment import CatbotSentiment
 from catbot.serverconfig import CatbotConfig
 from catbot.comm.meowmeowprotocol import MeowMeowProtocol
 
-VERSION = "2.1.3"
+VERSION = "2.3.0"
 
 """
 TODO
@@ -39,6 +40,7 @@ BOT = discord.Client()
 CLI = catbotcli.CatCLI()
 AIM = aimodule.AIModule()
 CAT_VISION = CatbotVision(enabled=not DISABLE_AI)
+CAT_SENTIMENT = CatbotSentiment(enabled=True)
 
 LASTDAY = None
 BOOT_TIMESTAMP = time.time()
@@ -446,8 +448,12 @@ RULES = {
         base.Rule([CMD + "cat", CMD + "kitte", CMD + "kitty", CMD + "meow", CMD + "kat"], base.Rule.STARTS_WITH, catapi.CatApi()),
         base.Rule([CMD + "dog", CMD + "woof", CMD + "bark", CMD + "bork"], base.Rule.STARTS_WITH, dogapi.DogApi()),
 
+        # sentiment - experimental
+        base.Rule(CMD + "exp_s", base.Rule.STARTS_WITH, CAT_SENTIMENT),
+
         # vision
         base.Rule(CMD + "vision history", base.Rule.CONTAINS_ALL, CatbotVisionHistory()),
+        base.Rule(CMD + "vision toggle", base.Rule.CONTAINS_ALL, base.StrFuncCall(CAT_VISION.toggle)),
         HasImageRule(CAT_VISION),
 
         # identity rule

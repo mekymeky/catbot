@@ -1,8 +1,8 @@
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-from keras.models import load_model
-from keras_efficientnets import EfficientNetB5
+from tf.keras.models import load_model
+#from keras_efficientnets import EfficientNetB5 # TODO compatible with TF2? if not, replace with official EFN, but will need retraining
 import time
 from discord import Embed
 from datetime import datetime
@@ -33,7 +33,7 @@ class HasImageRule(base.Rule):
 
 class CatbotVisionHistory(base.AsyncModule):
     def __init__(self):
-        super().__init__("CatbotVisionModule", base.Module.NATIVE, handler=self.show_history)
+        super().__init__("CatbotVisionHistoryModule", base.Module.NATIVE, handler=self.show_history)
 
     async def show_history(self, cmsg):
         history = CatbotVision.history.get(cmsg.server_id, [])
@@ -83,12 +83,20 @@ class CatbotVision(base.AsyncModule):
         return base.NO_MESSAGE_ACTION
 
     @staticmethod
-    def update_history(cmsg, timestamp, processing_time, confidence):
+    def update_history(cmsg, timestamp, processing_time, confidence, image):
         if cmsg.server_id not in CatbotVision.history:
             CatbotVision.history[cmsg.server_id] = []
         if len(CatbotVision.history[cmsg.server_id]) >= CatbotVision.max_history_len:
             CatbotVision.history[cmsg.server_id] = CatbotVision.history[cmsg.server_id][1:]
-        CatbotVision.history[cmsg.server_id].append([timestamp, processing_time, confidence])
+        CatbotVision.history[cmsg.server_id].append([timestamp, processing_time, confidence, image])
+
+    def toggle(self):
+        if self.enabled:
+            self.enabled = False
+            return "AI vision module disabled."
+        else:
+            self.enabled = True
+            return "AI vision module enabled."
 
     def predict_image(self, cmsg, image):
         timestamp = time.time()
@@ -105,7 +113,7 @@ class CatbotVision(base.AsyncModule):
         pred = self.model.predict([x])
         print("pred:", round(pred[0][0], 4), round(pred[0][1], 4))
         result = pred[0][1]
-        CatbotVision.update_history(cmsg, timestamp, time.time() - timestamp, result)
+        CatbotVision.update_history(cmsg, timestamp, time.time() - timestamp, result, x)
         if result > 0.5:
             is_cat = True
         else:

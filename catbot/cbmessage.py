@@ -146,6 +146,7 @@ class CatbotMessage:
                     self.flags["night"] = True
 
     def clean_msg(self, msg):
+        # TODO should be redone with a regex, this is terrible
         msg = msg.lower()
         msg = msg.replace(".", "")
         msg = msg.replace(",", "")
@@ -157,6 +158,7 @@ class CatbotMessage:
         return msg
 
     def trim_spaces(self, msg):
+        # TODO should be redone with a regex, this is also terrible
         msg = msg.replace("\n", " ")
         msg = msg.replace("\t", " ")
         msg = msg.replace("  ", " ")
