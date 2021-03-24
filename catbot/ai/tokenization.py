@@ -452,10 +452,10 @@ def mb_preprocess_text(text, tokenizer):
     tokens = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text))
     tlen = len(tokens)
     input_len = tlen if tlen <= 128 else 128  # TODO
-    input_word_ids = np.zeros((1, 128), dtype=np.int32)
-    input_mask = np.zeros((1, 128), dtype=np.int32)
     input_type_ids = np.zeros((1, 128), dtype=np.int32)
+    input_mask = np.zeros((1, 128), dtype=np.int32)
+    input_word_ids = np.zeros((1, 128), dtype=np.int32)
     for i in range(input_len):
         input_word_ids[0][i] = tokens[i]
         input_mask[0][i] = 1
-    return [input_word_ids, input_mask, input_type_ids]
+    return [input_type_ids, input_mask, input_word_ids]
