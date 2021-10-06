@@ -2,6 +2,8 @@
 
 from catbot.cbmessage import CatbotMessage
 
+CMD = "$cat$"
+
 BOT_UID = "<@439045787041660928>"
 
 EMOJI_THINK = "🤔"
@@ -207,6 +209,7 @@ NOP_MODULE = NOPModule()
 
 
 class Rule:
+    # in case of adding new rule types, don't forget to add them to TYPENAMES, too
     MATCH = 0  # exactly matches conditions (depending on case sensitivity)
     CONTAINS_ALL = 1  # contains all conditions
     CONTAINS_ONE_OF = 2  # contains at least one of conditions
@@ -346,6 +349,7 @@ TYPENAMES = {
     },
     Rule: {
         Rule.MATCH: "MATCH",
+        Rule.CONTAINS_ALL: "CONTAINS_ALL",
         Rule.CONTAINS_ONE_OF: "CONTAINS_ONE_OF",
         Rule.STARTS_WITH: "STARTS_WITH",
         Rule.COMMAND: "COMMAND",

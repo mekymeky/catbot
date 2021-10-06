@@ -22,6 +22,9 @@ class CatbotMessage:
             self.bot_nickname = self.bot_name
         self.author = str(discord_msg.author)
         self.channel = str(discord_msg.channel)
+        self.author_voice_channel = None
+        if discord_msg.author.voice is not None:
+            self.author_voice_channel = discord_msg.author.voice.channel
         self.config = config
         self.command_prefix = config.get("command_prefix", "!")
         self.version = version

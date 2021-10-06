@@ -1,5 +1,7 @@
 # tensorflow 2.4 required for AI ops, if running on a legacy machine, then compiled without AVX instructions
+# ffmpeg is needed for all voice features
 # discord may be outdated on automated pip download, but pip does contain a newer wheel, probably just badly named
 discord
 dice
 pillow
+PyNaCl

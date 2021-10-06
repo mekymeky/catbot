@@ -11,6 +11,7 @@ from datetime import datetime
 import asyncio
 import importlib
 import catbot.botbase as base
+from catbot.botbase import CMD
 import catbot.macromodule as macro
 import catbot.aimodule as aimodule, catbot.catbotcli as catbotcli, catbot.dogapi as dogapi, catbot.catapi as catapi
 from catbot.cbmessage import CatbotMessage
@@ -18,6 +19,7 @@ from catbot.ai.vision import CatbotVision, HasImageRule, CatbotVisionHistory
 from catbot.ai.sentiment import CatbotSentiment
 from catbot.serverconfig import CatbotConfig
 from catbot.comm.meowmeowprotocol import MeowMeowProtocol
+from catbot.voice import CatbotVoice
 
 VERSION = "2.3.0"
 
@@ -31,7 +33,6 @@ TODO
 
 TOKEN_FILE_NAME = "discord_token"
 DISABLE_AI_FILE_NAME = "disable_ai"
-CMD = "$cat$"
 
 CURR = 0
 DISABLE_AI = os.path.exists(DISABLE_AI_FILE_NAME)
@@ -40,7 +41,8 @@ BOT = discord.Client()
 CLI = catbotcli.CatCLI()
 AIM = aimodule.AIModule()
 CAT_VISION = CatbotVision(enabled=not DISABLE_AI)
-CAT_SENTIMENT = CatbotSentiment(enabled=True)
+CAT_SENTIMENT = CatbotSentiment(enabled=False)
+CAT_VOICE = CatbotVoice(enabled=False)
 
 LASTDAY = None
 BOOT_TIMESTAMP = time.time()
@@ -267,9 +269,9 @@ async def on_message(message):
     while action.type == base.Action.CONTINUE:
         action = base.NO_MESSAGE_ACTION
         for rule in RULES["global"]:
-            base.LOGGER.debug("Checking rule: ", rule)
+            base.LOGGER.debug("Checking rule: ", str(rule))
             if rule.check(cmsg):
-                base.LOGGER.debug("Running module")
+                base.LOGGER.debug("Running module: ", str(rule.module))
                 action = await rule.module.run(cmsg)
 
                 if action is None or not isinstance(action, base.Action):
@@ -455,6 +457,11 @@ RULES = {
         base.Rule(CMD + "vision history", base.Rule.CONTAINS_ALL, CatbotVisionHistory()),
         base.Rule(CMD + "vision toggle", base.Rule.CONTAINS_ALL, base.StrFuncCall(CAT_VISION.toggle)),
         HasImageRule(CAT_VISION),
+
+        # voice
+        base.Rule(CMD + "voice connect", base.Rule.CONTAINS_ALL, CAT_VOICE),
+        base.Rule(CMD + "voice disconnect", base.Rule.CONTAINS_ALL, CAT_VOICE),
+        base.Rule(CMD + "tts", base.Rule.STARTS_WITH, CAT_VOICE),
 
         # identity rule
         base.RuleOp.rules_and().rules(
