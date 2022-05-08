@@ -13,10 +13,11 @@ import importlib
 import catbot.botbase as base
 from catbot.botbase import CMD
 import catbot.macromodule as macro
-import catbot.aimodule as aimodule, catbot.catbotcli as catbotcli, catbot.dogapi as dogapi, catbot.catapi as catapi
+import catbot.catbotcli as catbotcli, catbot.dogapi as dogapi, catbot.catapi as catapi
 from catbot.cbmessage import CatbotMessage
 from catbot.ai.vision import CatbotVision, HasImageRule, CatbotVisionHistory
 from catbot.ai.sentiment import CatbotSentiment
+from catbot.ai.conversation import CatbotConversation, CatbotConvMemory
 from catbot.serverconfig import CatbotConfig
 from catbot.comm.meowmeowprotocol import MeowMeowProtocol
 from catbot.voice import CatbotVoice
@@ -39,7 +40,7 @@ DISABLE_AI = os.path.exists(DISABLE_AI_FILE_NAME)
 
 BOT = discord.Client()
 CLI = catbotcli.CatCLI()
-AIM = aimodule.AIModule()
+CAT_CONV = CatbotConversation(enabled=True)
 CAT_VISION = CatbotVision(enabled=not DISABLE_AI)
 CAT_SENTIMENT = CatbotSentiment(enabled=False)
 CAT_VOICE = CatbotVoice(enabled=False)
@@ -122,6 +123,7 @@ async def get_help_message(cmsg):
     embed_ln(e, cp + "cat", "Cat.")
     embed_ln(e, cp + "dog", "Like cat, but dog.")
     embed_ln(e, cp + "vision history", "Show log of vision events with timestamps, processing time and confidence.")
+    embed_ln(e, cp + "conv memory", "Show current conversation AI memory.")
     embed_ln(e, cp + "help", "Display this help text.")
     e.set_footer(text=cmsg.bot_name + " version " + VERSION)
     await cmsg.embed(e)
@@ -169,7 +171,7 @@ async def catbot_command(cmsg):
 
 
 async def get_introspection_result(cmsg):
-    aim_accessible = AIM.test()
+    aim_accessible = await CAT_CONV.test()
     e = discord.Embed(title="Internal state", color=base.COLOR_ORANGE,
                       description="Running since "+str(datetime.fromtimestamp(BOOT_TIMESTAMP)))
     e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
@@ -378,7 +380,7 @@ async def process_macro(cmsg):
 
 
 async def ai_process(cmsg):
-    response = AIM.process(cmsg.raw[7::])
+    response = AIM.process(cmsg)
     await cmsg.respond(response)
 
 
@@ -444,11 +446,14 @@ RULES = {
         base.Rule(CMD + "undefine ", base.Rule.STARTS_WITH, base.FuncCall(macro.undefine)),
         base.Rule(CMD + "macros", base.Rule.STARTS_WITH, base.StrFuncCall(macro.listmacros)),
         base.Rule("/", base.Rule.STARTS_WITH, base.AsyncFuncCall(process_macro)),
-        base.Rule(CMD + "a ", base.Rule.STARTS_WITH, base.AsyncFuncCall(ai_process)),
         base.Rule(CMD + "roll ", base.Rule.STARTS_WITH, base.StrFuncCall(dice_roll)),
         base.Rule(CMD + "seal", base.Rule.STARTS_WITH, base.SimpleMessage(base.EMOJI_SEALCLUB)),
         base.Rule([CMD + "cat", CMD + "kitte", CMD + "kitty", CMD + "meow", CMD + "kat"], base.Rule.STARTS_WITH, catapi.CatApi()),
         base.Rule([CMD + "dog", CMD + "woof", CMD + "bark", CMD + "bork"], base.Rule.STARTS_WITH, dogapi.DogApi()),
+
+        # AI conversation - experimental
+        base.Rule(CMD + "a ", base.Rule.STARTS_WITH, CAT_CONV),
+        base.Rule(CMD + "conv memory", base.Rule.CONTAINS_ALL, CatbotConvMemory()),
 
         # sentiment - experimental
         base.Rule(CMD + "exp_s", base.Rule.STARTS_WITH, CAT_SENTIMENT),

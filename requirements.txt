@@ -5,3 +5,5 @@ discord
 dice
 pillow
 PyNaCl
+http3
+requests
