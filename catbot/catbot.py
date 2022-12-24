@@ -36,7 +36,7 @@ CMD = "$cat$"
 CURR = 0
 DISABLE_AI = os.path.exists(DISABLE_AI_FILE_NAME)
 
-BOT = discord.Client(discord.Intents.default())
+BOT = discord.Client(intents=discord.Intents.default())
 CLI = catbotcli.CatCLI()
 AIM = aimodule.AIModule()
 CAT_VISION = CatbotVision(enabled=not DISABLE_AI)
