@@ -40,7 +40,7 @@ DISABLE_AI = os.path.exists(DISABLE_AI_FILE_NAME)
 
 BOT = discord.Client(intents=discord.Intents.default())
 CLI = catbotcli.CatCLI()
-CAT_CONV = CatbotConversation(enabled=True)
+CAT_CONV = CatbotConversation(enabled=not DISABLE_AI)
 CAT_VISION = CatbotVision(enabled=not DISABLE_AI)
 CAT_SENTIMENT = CatbotSentiment(enabled=False)
 CAT_VOICE = CatbotVoice(enabled=False)
