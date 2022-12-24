@@ -38,7 +38,11 @@ DISABLE_AI_FILE_NAME = "disable_ai"
 CURR = 0
 DISABLE_AI = os.path.exists(DISABLE_AI_FILE_NAME)
 
-BOT = discord.Client(intents=discord.Intents.default())
+intents = discord.Intents.default()
+intents.members = True
+intents.message_content = True
+
+BOT = discord.Client(intents=intents)
 CLI = catbotcli.CatCLI()
 CAT_CONV = CatbotConversation(enabled=not DISABLE_AI)
 CAT_VISION = CatbotVision(enabled=not DISABLE_AI)
@@ -240,12 +244,12 @@ async def on_guild_join(guild):
 
 @BOT.event
 async def on_message(message):
-    config = CatbotConfig.get_config(str(message.guild.id))
-    print("Retrieved cfg", config)
-
     # Ignore bot's own messages
     if message.author == BOT.user:
         return
+
+    config = CatbotConfig.get_config(str(message.guild.id))
+    print("Retrieved cfg", config)
 
     # Rewrite commands according to server config
     command_prefix = config.get("command_prefix", "!")
@@ -253,7 +257,9 @@ async def on_message(message):
 
     # print message content
     try:
+        print("---- Message content ----")
         print(message.content)
+        print("-------------------------")
     except Exception as ex:
         print(ex)
 
