@@ -453,6 +453,7 @@ RULES = {
 
         # AI conversation - experimental
         base.Rule(CMD + "a ", base.Rule.STARTS_WITH, CAT_CONV),
+        base.Rule(CMD + "meminject ", base.Rule.STARTS_WITH, CAT_CONV),
         base.Rule(CMD + "conv memory", base.Rule.CONTAINS_ALL, CatbotConvMemory()),
 
         # sentiment - experimental

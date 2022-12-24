@@ -69,6 +69,8 @@ class CatbotVision(base.AsyncModule):
             self.model = load_model("models/cat.h5")
 
     async def process_first_image(self, cmsg):
+        if not self.enabled:
+            return base.NO_MESSAGE_ACTION
         result, confidence = False, 1.0
         for attachment in cmsg.discord_msg.attachments:
             if url_has_image(attachment.url):

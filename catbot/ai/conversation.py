@@ -1,43 +1,51 @@
 import time
 import http3
 
+from discord import Embed
 import catbot.botbase as base
 
 
 class CatbotConvMemory(base.AsyncModule):
+    memories = []
+
+    @staticmethod
+    def get_memories():
+        return CatbotConvMemory.memories
+
+    @staticmethod
+    def get_memories_str():
+        text = "\n".join(CatbotConvMemory.memories)
+        if len(text) > 1700:
+            text = text[:1700] + "\n..."
+        return text
+
     def __init__(self):
         super().__init__("CatbotConvMemoriesModule", base.Module.NATIVE, handler=self.show_memories)
 
     async def show_memories(self, cmsg):
-        memories = CatbotConversation.get_memories()
+        max_memories = 30
 
-        e = Embed(title="Catbot Memories", color=base.COLOR_MAIN)
+        e = Embed(title="Catbot Memory", color=base.COLOR_MAIN)
         e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
-        if len(memories) == 0:
+        memory_count = len(CatbotConvMemory.memories)
+
+        e.add_field(name="Current memories", value=f"{memory_count}")
+        if memory_count == 0:
             e.add_field(name="_ _", value="enmpty", inline=False)
         else:
-            for memory in memories:
+            for memory in CatbotConvMemory.memories[:max_memories]:
                 e.add_field(name="_ _",
                             value=str(memory),
+                            inline=False)
+            if memory_count > max_memories:
+                e.add_field(name="_ _",
+                            value="...",
                             inline=False)
         e.set_footer(text=cmsg.bot_name + " version " + cmsg.version)
         await cmsg.embed(e)
 
 
 class CatbotConversation(base.AsyncModule):
-
-    _memories = []
-
-    @classmethod
-    def get_memories(cls):
-        return cls._memories
-
-    @classmethod
-    def get_memories_str(cls):
-        text = "\n".join(cls._memories)
-        if len(text) > 1700:
-            text = text[:1700] + "\n..."
-        return text
 
     def __init__(self, enabled=True):
         super().__init__("CatbotConversationModule", base.Module.NATIVE, handler=self.process)
@@ -62,15 +70,24 @@ class CatbotConversation(base.AsyncModule):
         res = res.replace(" i ", " I ")
         res = res.replace(" i'", " I'")
         res = res.replace("_POTENTIALLY_UNSAFE__", "")
+        res = res.replace("Your persona: ", "(me) ")
+        res = res.replace("Partner's persona: ", "(partner) ")
+
 
         return res.strip()
 
     async def process(self, cmsg):
         if not self.enabled:
             await cmsg.respond("Experimental conversation module is disabled.")
-            return
-        text = cmsg.raw[7:]
-        text = text.strip()
+            return base.NO_MESSAGE_ACTION
+
+        command_start = cmsg.raw_lower[5:20]
+        if command_start.startswith("meminject "):
+            text = "your persona: " + cmsg.raw[15:].strip()
+            memory_injection = True
+        else:
+            text = cmsg.raw[7:].strip()
+            memory_injection = False
 
         if self._busy:
             await cmsg.react(base.EMOJI_BLOBCATCONFUSE)
@@ -89,7 +106,12 @@ class CatbotConversation(base.AsyncModule):
         elif response == "#FAILED":
             await cmsg.respond(f"AI request failed {base.EMOJI_BLOBCATNOTLIKE}")
         else:
-            await cmsg.respond(response)
+            if memory_injection:
+                await cmsg.respond("Done.")
+            else:
+                await cmsg.respond(response)
+
+        return base.NO_MESSAGE_ACTION
 
     async def test(self):
         try:
@@ -107,8 +129,10 @@ class CatbotConversation(base.AsyncModule):
         req_start = time.time()
         try:
             response_data = await self._http_client.post(f"{self.base_url}/interact", data=text, timeout=250)
-            response = self._postprocess(response_data.json()["text"])
-            self._memories = list(map(self._postprocess, response_data.json()["memories"]))
+            response_json = response_data.json()
+            response = self._postprocess(response_json["text"])
+            CatbotConvMemory.memories = list(map(self._postprocess, response_json["memories"]))
+            print("RES JSON: " + str(response_json))
             print("AIM RES: " + str(response))
             return response
             
