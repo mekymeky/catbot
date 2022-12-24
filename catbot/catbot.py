@@ -22,7 +22,7 @@ from catbot.serverconfig import CatbotConfig
 from catbot.comm.meowmeowprotocol import MeowMeowProtocol
 from catbot.voice import CatbotVoice
 
-VERSION = "2.3.0"
+VERSION = "2.4.0"
 
 """
 TODO
