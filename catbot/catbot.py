@@ -114,7 +114,7 @@ def embed_ln(embed, name, value, inline=False):
 async def get_help_message(cmsg):
     cp = cmsg.command_prefix
     e = discord.Embed(title="Available commands", color=base.COLOR_MAIN)
-    e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
+    e.set_thumbnail(url=str(cmsg.bot.user.avatar.url))
     embed_ln(e, "!catbot quiet true/false", "Enables or disables quiet mode.")
     embed_ln(e, "!catbot prefix PREFIX", "Changes command prefix to PREFIX.")
     embed_ln(e, cp + "macros", "List defined macros.")
@@ -178,7 +178,7 @@ async def get_introspection_result(cmsg):
     aim_accessible = await CAT_CONV.test()
     e = discord.Embed(title="Internal state", color=base.COLOR_ORANGE,
                       description="Running since "+str(datetime.fromtimestamp(BOOT_TIMESTAMP)))
-    e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
+    e.set_thumbnail(url=str(cmsg.bot.user.avatar.url))
     embed_ln(e, "Name", str(cmsg.bot_name))
     embed_ln(e, "Nickname", str(cmsg.bot_nickname))
     embed_ln(e, "Version", VERSION)

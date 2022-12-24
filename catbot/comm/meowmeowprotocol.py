@@ -12,7 +12,7 @@ class MeowMeowProtocol(base.AsyncModule):
             cmsg.commit_config()
 
             e = Embed(title="Meow Meow Protocol", color=base.COLOR_GREEN)
-            e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
+            e.set_thumbnail(url=str(cmsg.bot.user.avatar.url))
             e.add_field(name="Success", value="Channel registered", inline=False)
             e.set_footer(text=cmsg.bot_name + " version " + cmsg.version)
             await cmsg.embed(e)

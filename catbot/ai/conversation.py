@@ -26,7 +26,7 @@ class CatbotConvMemory(base.AsyncModule):
         max_memories = 30
 
         e = Embed(title="Catbot Memory", color=base.COLOR_MAIN)
-        e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
+        e.set_thumbnail(url=str(cmsg.bot.user.avatar.url))
         memory_count = len(CatbotConvMemory.memories)
 
         e.add_field(name="Current memories", value=f"{memory_count}")

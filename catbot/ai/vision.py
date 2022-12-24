@@ -39,7 +39,7 @@ class CatbotVisionHistory(base.AsyncModule):
         history = CatbotVision.history.get(cmsg.server_id, [])
 
         e = Embed(title="Catbot Vision History", color=base.COLOR_MAIN)
-        e.set_thumbnail(url=str(cmsg.bot.user.avatar_url))
+        e.set_thumbnail(url=str(cmsg.bot.user.avatar.url))
         if len(history) == 0:
             e.add_field(name="_ _", value="No records available", inline=False)
         else:
